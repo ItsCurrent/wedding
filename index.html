@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Приглашение на нашу свадьбу</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 1. ГЛАВНЫЙ ЭКРАН -->
+    <header>
+        <h1>Герман и Ксения</h1>
+        <div class="wedding-photo-container">
+            <img src="wedding-photo.jpg.jpg" alt="Герман и Ксения" class="main-wedding-photo">
+        </div>
+        <p>Приглашают вас на празднование нашей свадьбы!</p>
+        <div class="date">13.08.2026</div>
+    </header>
+
+    <!-- 2. ТАЙМИНГ ДНЯ -->
+    <section>
+        <h2>Программа дня:</h2>
+        <ul>
+            <li><strong>12:20</strong> — Регистрация брака в павильоне "Космос"</li>
+            <li><strong>13:00</strong> — Свободное время, прогулки по ВДНХ</li>
+            <li><strong>15:00</strong> — Свадебный банкет</li>
+        </ul>
+    </section>
+
+    <!-- 3. МЕСТО ПРОВЕДЕНИЯ -->
+    <section>
+        <h2>Где всё будет происходить:</h2>
+        <p><strong>Адрес ресторана:</strong> Ресторан "Купец", Лобненская ул., 11, корп. 5, Москва</p>
+    </section>
+
+    <!-- 4. АНКЕТА ГОСТЯ (RSVP) -->
+    <section>
+        <h2>Подтверждение присутствия:</h2>
+        <p>Пожалуйста, подтвердите ваше участие до 10 августа:</p>
+        
+        <form id="rsvpForm" onsubmit="return false;">
+            <label>Ваше Имя и Фамилия: <br>
+                <input type="text" id="guestName" placeholder="Например, Иван Иванов" required>
+            </label>
+            <br><br>
+            
+            <label>Сможете ли вы прийти?<br>
+                <input type="radio" name="attendance" value="Да, с удовольствием!"> Да, с удовольствием!<br>
+                <input type="radio" name="attendance" value="К сожалению, не смогу"> К сожалению, не смогу
+            </label>
+            <br><br>
+
+            <fieldset style="border: none; padding: 0; margin: 0;">
+                <legend><strong>Какой напиток вы предпочитаете? (можно выбрать несколько):</strong></legend>
+                <br>
+                <label><input type="checkbox" name="drinks" value="Вода"> Вода</label><br>
+                <label><input type="checkbox" name="drinks" value="Сок"> Сок</label><br>
+                <label><input type="checkbox" name="drinks" value="Чай"> Чай</label><br>
+                <label><input type="checkbox" name="drinks" value="Шампанское"> Шампанское</label><br>
+                <label><input type="checkbox" name="drinks" value="Вино"> Вино</label><br>
+                <label><input type="checkbox" name="drinks" value="Водка"> Водка</label><br>
+                <label><input type="checkbox" name="drinks" value="Коньяк"> Коньяк</label><br>
+                <br>
+                <label>
+                    <input type="checkbox" name="drinks" value="Другое"> Другое (напишите свой вариант):<br>
+                    <input type="text" id="otherDrink" placeholder="Например, виски или ром" style="margin-top: 5px;">
+                </label>
+            </fieldset>
+            <br><br>
+
+            <!-- Мы явно говорим кнопке: при нажатии запусти функцию sendToTelegram() -->
+            <button type="button" onclick="sendToTelegram()">Отправить ответ</button>
+        </form>
+    </section>
+
+    <!-- НАДЕЖНЫЙ СКРИПТ ОТПРАВКИ -->
+    <script>
+        function sendToTelegram() {
+            // 1. Берем имя
+            const name = document.getElementById('guestName').value;
+            
+            // Проверка: если имя пустое, просим заполнить
+            if (!name.trim()) {
+                alert("Пожалуйста, введите ваше имя и фамилию.");
+                return;
+            }
+
+            // 2. Берем присутствие
+            const attendanceElements = document.getElementsByName('attendance');
+            let attendance = 'Не выбрано';
+            for (let i = 0; i < attendanceElements.length; i++) {
+                if (attendanceElements[i].checked) {
+                    attendance = attendanceElements[i].value;
+                }
+            }
+
+            // 3. Берем напитки
+            const drinkElements = document.getElementsByName('drinks');
+            let drinks = [];
+            for (let i = 0; i < drinkElements.length; i++) {
+                if (drinkElements[i].checked) {
+                    if (drinkElements[i].value === 'Другое') {
+                        const otherText = document.getElementById('otherDrink').value;
+                        if (otherText) drinks.push(`Другое: ${otherText}`);
+                    } else {
+                        drinks.push(drinkElements[i].value);
+                    }
+                }
+            }
+
+            // Настройки Telegram
+            const TELEGRAM_TOKEN = '8494391781:AAErXaaVXWE7pRroiq4I-YXnwvLkAeYaNWs';
+            const CHAT_ID = '312189288';
+
+            // Формируем текст сообщения
+            let message = `🔔 *Новый ответ на приглашение!*\n\n`;
+            message += `👤 *Имя:* ${name}\n`;
+            message += `💌 *Присутствие:* ${attendance}\n`;
+            message += `🥂 *Напитки:* ${drinks.length > 0 ? drinks.join(', ') : 'Не выбрано'}`;
+
+            const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+            
+            // Отправляем данные в Telegram
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: CHAT_ID,
+                    text: message,
+                    parse_mode: 'Markdown'
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Спасибо! Ваш ответ успешно отправлен в Telegram.');
+                    document.getElementById('rsvpForm').reset(); // Очищаем форму
+                } else {
+                    alert('Упс! Telegram вернул ошибку. Проверь, запущен ли бот.');
+                }
+            })
+            .catch(error => {
+                alert('Ошибка сети. Проверь подключение к интернету.');
+            });
+        }
+    </script>
+</body>
+</html>
